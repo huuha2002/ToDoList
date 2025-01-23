@@ -22,12 +22,16 @@ const DateTimePickerComponent = (props: Props) => {
     const { type, title, placeholder, selected, onSelected } = props
     const [isVisibleModelDateTime, setisVisibleModelDateTime] = useState(false);
     const [date, setDate] = useState(selected ?? new Date())
+    const [open, setOpen] = useState(false)
     return (
         <>
             <View style={{ marginBottom: 16 }}>
                 {title && <TitleComponent text={title}></TitleComponent>}
                 <RowComponent
-                    onPress={() => setisVisibleModelDateTime(true)}
+                    onPress={() => {
+                        setisVisibleModelDateTime(true)
+                        setOpen(true)
+                    }}
                     styles={[globalStyles.inputComponent, { marginTop: title ? 8 : 0 }]}>
                     <TextComponent
                         flex={1}
@@ -43,7 +47,30 @@ const DateTimePickerComponent = (props: Props) => {
                     <Ionicons name="chevron-down" size={24} color={colors.text} />
                 </RowComponent>
             </View>
-            <Modal
+            <View>
+                <DatePicker
+                    modal
+                    open={open}
+                    mode={type ? type : 'datetime'}
+                    date={date}
+                    onDateChange={val => setDate(val)}
+                    locale='vi'
+                    theme='dark'
+                    title={title}
+                    buttonColor='#00e0ff'
+                    dividerColor='#00e0ff'
+                    confirmText='Xác nhận'
+                    cancelText='Huỷ bỏ'
+                    onConfirm={(date) => {
+                        setOpen(false)
+                        onSelected(date)
+                    }}
+                    onCancel={() => {
+                        setOpen(false)
+                    }}
+                />
+            </View>
+            {/* <Modal
                 visible={isVisibleModelDateTime}
                 transparent
                 animationType='slide'
@@ -64,14 +91,7 @@ const DateTimePickerComponent = (props: Props) => {
                         borderRadius: 20
                     }}>
                         <TitleComponent text='Date Time' color='black' />
-                        <View>
-                            <DatePicker
-                                mode={type ? type : 'datetime'}
-                                date={date}
-                                onDateChange={val => setDate(val)}
-                                locale='vi'
-                            />
-                        </View>
+                        
                         <SpaceComponent height={20} />
                         <TouchableOpacity
                             onPress={() => {
@@ -103,7 +123,7 @@ const DateTimePickerComponent = (props: Props) => {
                     </View>
 
                 </View>
-            </Modal>
+            </Modal> */}
         </>
 
     );

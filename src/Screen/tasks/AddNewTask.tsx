@@ -26,6 +26,7 @@ const AddNewTask = ({ navigation }: any) => {
         const item: any = { ...taskDetail }
         item[`${id}`] = value
         settaskDetail(item)
+        console.log(id + ' : ' + value)
     }
     const handleAddNewTask = async () => {
         console.log(taskDetail)
