@@ -20,8 +20,8 @@ import { fontFamilies } from '../../constants/fontFamilies';
 import ButtonComponent from '../../components/ButtonComponent';
 const HomeScreen = ({ navigation }: any) => {
     return (
-        <View>
-            <Containers>
+        <View style={{ flex: 1 }}>
+            <Containers scrollEnable>
                 <SectionComponent>
                     <RowComponent justify='space-between'>
                         <Ionicons name="menu-sharp" size={24} color={colors.desc} />

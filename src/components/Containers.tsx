@@ -7,20 +7,22 @@ import TextComponent from './TextComponent';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../constants/color';
 import { useNavigation } from '@react-navigation/native';
+import { screensEnabled } from 'react-native-screens';
 
 
 interface Props {
     title?: string;
     back?: boolean;
     right?: ReactNode;
-    children: ReactNode
+    children: ReactNode;
+    scrollEnable?: boolean
 }
 
 const Containers = (props: Props) => {
-    const { title, back, right, children } = props
+    const { title, back, right, children, scrollEnable } = props
     const navigation = useNavigation();  // Sử dụng hook để lấy navigation
     return (
-        <ScrollView style={[globalStyles.container]}>
+        <View style={[globalStyles.container]}>
             {back && (
                 <SectionComponent>
                     <RowComponent justify='space-between'>
@@ -33,9 +35,13 @@ const Containers = (props: Props) => {
                     </RowComponent>
                 </SectionComponent>
             )}
-            {children}
-        </ScrollView>
+            {scrollEnable ?
+                (
+                    <ScrollView style={{ flex: 1 }}>{children}</ScrollView>
+                ) : (
+                    <View style={{ flex: 1 }}>{children}</View>)}
 
+        </View>
     );
 }
 

@@ -10,28 +10,43 @@ import { colors } from '../../constants/color';
 import ButtonComponent from '../../components/ButtonComponent';
 import SpaceComponent from '../../components/SpaceComponent';
 import { globalStyles } from '../../styles/globalStyles';
+import auth from '@react-native-firebase/auth'
 
-const LoginScreen = ({ navigation }: any) => {
+const RegisterScreen = ({ navigation }: any) => {
     const [email, setemail] = useState('');
     const [password, setpassword] = useState('');
+    const [rePassword, setRePassword] = useState('');
     const [loading, setloading] = useState(false);
     const [error, seterror] = useState('');
     const [isSecure, setIsSecure] = useState(true);
 
     useEffect(() => {
-        if (email || password)
+        if (email || password || rePassword)
             seterror('')
-    }, [email, password])
+    }, [email, password, rePassword])
 
-    const handleLoginWithEmail = async () => {
-        if (!email || !password) {
+    const handleRegisterWithEmail = async () => {
+        if (!email || !password || !rePassword) {
             seterror('Please enter your Email and Password!')
         }
-        else
+        else {
             seterror('')
+            setloading(true)
+            await auth().createUserWithEmailAndPassword(email, password).then(userCredential => {
+                const user = userCredential.user;
+                console.log('user: ' + user)
+                //save user to firestore
+
+                setloading(false);
+            }).catch((error): any => {
+                setloading(false);
+                seterror(error.message);
+            }
+            )
+        }
     }
     return (
-        <Containers scrollEnable={false}>
+        <Containers back scrollEnable={false}>
             <SectionComponent
                 onPress={() => Keyboard.dismiss()}
                 styles={{
@@ -39,7 +54,7 @@ const LoginScreen = ({ navigation }: any) => {
                     flex: 1,
                 }}>
                 <TitleComponent
-                    text='Login'
+                    text='Register'
                     size={30}
                     font={fontFamilies.bold}
                     styles={{ textTransform: 'uppercase', textAlign: 'center' }}
@@ -54,8 +69,8 @@ const LoginScreen = ({ navigation }: any) => {
                         title='Email'
                     />
                     <InputComponent
-                        value={password}
-                        onChange={val => setpassword(val)}
+                        value={rePassword}
+                        onChange={val => setRePassword(val)}
                         prefix={<Ionicons name="lock-closed-outline" size={22} color={colors.text} />}
                         placeHolder='Password'
                         title='Password'
@@ -68,16 +83,34 @@ const LoginScreen = ({ navigation }: any) => {
                             }
                         </TouchableOpacity>}
                     />
+                    <InputComponent
+                        value={password}
+                        onChange={val => setpassword(val)}
+                        prefix={<Ionicons name="lock-closed-outline" size={22} color={colors.text} />}
+                        placeHolder='Confirm Password'
+                        title='Confirm Password'
+                        secure={isSecure}
+                        affix={<TouchableOpacity onPress={() => setIsSecure(val => !val)}>
+                            {isSecure ?
+                                (<Ionicons name="eye-off-outline" size={20} color={colors.text} />)
+                                :
+                                (<Ionicons name="eye-outline" size={20} color={colors.text} />)
+                            }
+                        </TouchableOpacity>}
+                    />
                     {error && <Text style={{ color: 'coral' }}>{error}</Text>}
+
                 </View>
+
+
                 <ButtonComponent
-                    text='Login'
-                    onPress={() => handleLoginWithEmail()}
+                    text='Join now'
+                    onPress={() => handleRegisterWithEmail()}
                     disabled={loading}
                 ></ButtonComponent>
                 <SpaceComponent height={20} />
-                <Text style={[globalStyles.text, { textAlign: 'center' }]}>You don't have account?
-                    <Text style={{ color: 'coral' }} onPress={() => navigation.navigate('RegisterScreen')}> Register now!</Text></Text>
+                <Text style={[globalStyles.text, { textAlign: 'center' }]}>You're already have account?
+                    <Text style={{ color: 'coral' }} onPress={() => navigation.navigate('LoginScreen')}> Login!</Text></Text>
             </SectionComponent>
         </Containers>
     );
@@ -85,4 +118,4 @@ const LoginScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({})
 
-export default LoginScreen;
+export default RegisterScreen;

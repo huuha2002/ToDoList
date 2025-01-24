@@ -43,6 +43,7 @@ const AddNewTask = ({ navigation }: any) => {
                     placeHolder='Title of Task'
                 />
                 <InputComponent
+                    
                     // prefix={<Ionicons name="person-outline" size={22} color={colors.text} />}
                     value={taskDetail.description}
                     onChange={val => handleChangeValue('description', val)}

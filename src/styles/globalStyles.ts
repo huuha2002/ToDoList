@@ -5,6 +5,7 @@ export const globalStyles = StyleSheet.create({
     container: {
         backgroundColor: colors.bgColor,
         paddingTop: Platform.OS === 'ios' ? 42 : 32,
+        flex: 1
     },
     text: {
         fontSize: 15,

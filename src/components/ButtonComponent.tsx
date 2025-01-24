@@ -1,25 +1,29 @@
 import React from 'react';
-import { StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import TextComponent from './TextComponent';
 import { fontFamilies } from '../constants/fontFamilies';
 import { useNavigation } from '@react-navigation/native';
+import { colors } from '../constants/color';
 
 interface Props {
     bgColor?: string,
     text: string,
+    size?: number,
     style?: StyleProp<ViewStyle>,
-    onPress?: () => void
+    onPress?: () => void,
+    disabled?: boolean
 }
 
 const ButtonComponent = (props: Props) => {
-    const { bgColor, text, style, onPress } = props
+    const { bgColor, text, size, style, onPress, disabled } = props
     return (
-        <View>
+        <View style={{}}>
             <TouchableOpacity
+                disabled={disabled}
                 onPress={onPress ? () => onPress() : undefined}
                 activeOpacity={1}
                 style={[{
-                    backgroundColor: bgColor ?? '#3498db',
+                    backgroundColor: disabled ? colors.gray : bgColor ?? '#3498db',
                     justifyContent: 'center',
                     alignItems: 'center',
                     padding: 10,
@@ -27,7 +31,11 @@ const ButtonComponent = (props: Props) => {
                 },
                     style
                 ]}>
-                <TextComponent text={text} font={fontFamilies.semiBold} />
+                {disabled ? (
+                    <ActivityIndicator />
+                ) : (
+                    <TextComponent text={text} flex={0} size={size} font={fontFamilies.semiBold} />
+                )}
             </TouchableOpacity>
         </View>
     );

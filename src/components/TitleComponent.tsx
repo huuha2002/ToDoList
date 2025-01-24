@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleProp, StyleSheet, TextStyle, ViewProps } from 'react-native';
 import { fontFamilies } from '../constants/fontFamilies';
 import TextComponent from './TextComponent';
 
@@ -7,16 +7,18 @@ interface Props {
     text: string,
     font?: string,
     size?: number,
-    color?: string
+    color?: string,
+    styles?: StyleProp<TextStyle>
 }
 
 const TitleComponent = (props: Props) => {
-    const { text, font, size, color } = props
+    const { text, font, size, color, styles } = props
     return (
         <TextComponent
             text={text}
             font={font ?? fontFamilies.semiBold}
             size={size ?? 20}
+            style={[styles, { flex: 0 }]}
         />
     );
 }

@@ -1,17 +1,21 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleProp, StyleSheet, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 
-interface Props{
+interface Props {
     children: ReactNode,
+    styles?: StyleProp<ViewStyle>,
+    onPress?: () => void
 }
 
-const SectionComponent = (props:Props) => {
-    const {children} = props
+const SectionComponent = (props: Props) => {
+    const { children, styles, onPress } = props
     return (
-        <View style={[globalStyles.section]}>
-            {children}
-        </View>
+        <TouchableWithoutFeedback onPress={onPress ? () => onPress() : undefined}>
+            <View style={[globalStyles.section, styles]}>
+                {children}
+            </View>
+        </TouchableWithoutFeedback>
     );
 }
 
