@@ -10,6 +10,7 @@ import { colors } from '../../constants/color';
 import ButtonComponent from '../../components/ButtonComponent';
 import SpaceComponent from '../../components/SpaceComponent';
 import { globalStyles } from '../../styles/globalStyles';
+import auth from '@react-native-firebase/auth'
 
 const LoginScreen = ({ navigation }: any) => {
     const [email, setemail] = useState('');
@@ -27,8 +28,21 @@ const LoginScreen = ({ navigation }: any) => {
         if (!email || !password) {
             seterror('Please enter your Email and Password!')
         }
-        else
-            seterror('')
+        else {
+            seterror('');
+            setloading(true);
+            await auth().signInWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    const user = userCredential.user;
+                    console.log('User: ' + JSON.stringify(user))
+                    setloading(false)
+                })
+                .catch((error: any) => {
+                    seterror(error.message);
+                    setloading(false)
+                })
+        }
+
     }
     return (
         <Containers scrollEnable={false}>

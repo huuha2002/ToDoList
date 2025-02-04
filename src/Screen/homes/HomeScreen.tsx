@@ -18,7 +18,10 @@ import AvatarGroup from '../../components/AvatarGroup';
 import ProgressBarComponent from '../../components/ProgressBarComponent';
 import { fontFamilies } from '../../constants/fontFamilies';
 import ButtonComponent from '../../components/ButtonComponent';
+import auth from '@react-native-firebase/auth'
+
 const HomeScreen = ({ navigation }: any) => {
+    const user = auth().currentUser;
     return (
         <View style={{ flex: 1 }}>
             <Containers scrollEnable>
@@ -29,8 +32,17 @@ const HomeScreen = ({ navigation }: any) => {
                     </RowComponent>
                 </SectionComponent>
                 <SectionComponent>
-                    <TextComponent text='Hi' />
-                    <TitleComponent text='Be Productive today!' />
+                    <RowComponent>
+                        <View style={{ flex: 1 }}>
+                            <TextComponent text={`Hi, ${user?.email}!`} />
+                            <TitleComponent text='Be Productive today!' />
+                        </View>
+                        <TouchableOpacity
+                        style={{alignSelf:'flex-start'}}
+                        onPress={async () => auth().signOut()}>
+                            <Ionicons name="log-out-outline" size={24} color={colors.text} />
+                        </TouchableOpacity>
+                    </RowComponent>
                 </SectionComponent>
                 <SectionComponent>
                     <RowComponent styles={[globalStyles.inputComponent]}
