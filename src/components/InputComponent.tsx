@@ -9,7 +9,7 @@ import RowComponent from './rowComponent';
 
 interface Props {
     value: string,
-    onChange: (val: string) => void
+    onChange?: (val: string) => void
     placeHolder?: string,
     title?: string,
     prefix?: ReactNode,
@@ -39,14 +39,14 @@ const InputComponent = (props: Props) => {
                         style={[globalStyles.text, {
                             margin: 0,
                             padding: 0,
-                            flex: 1,
+                            flex: 0,
                             // paddingVertical: 4,
 
                         }]}
                         placeholder={placeHolder ?? ''}
                         placeholderTextColor={'#676767'}
                         value={value}
-                        onChangeText={val => onChange(val)}
+                        onChangeText={val => onChange?.(val)}
                         multiline={multible}
                         numberOfLines={numberOfLine}
                         secureTextEntry={secure}
@@ -55,7 +55,7 @@ const InputComponent = (props: Props) => {
                 {affix && <TouchableOpacity>{affix}</TouchableOpacity>}
 
                 {allowClear && value && (
-                    <TouchableOpacity onPress={() => onChange('')}>
+                    <TouchableOpacity onPress={() => onChange?.('')}>
                         <Ionicons name="close-sharp" size={22} color={colors.text} />
                     </TouchableOpacity>
                 )}

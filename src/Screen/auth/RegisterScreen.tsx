@@ -11,6 +11,7 @@ import ButtonComponent from '../../components/ButtonComponent';
 import SpaceComponent from '../../components/SpaceComponent';
 import { globalStyles } from '../../styles/globalStyles';
 import auth from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore';
 
 const RegisterScreen = ({ navigation }: any) => {
     const [email, setemail] = useState('');
@@ -32,17 +33,22 @@ const RegisterScreen = ({ navigation }: any) => {
         else {
             seterror('')
             setloading(true)
-            await auth().createUserWithEmailAndPassword(email, password).then(userCredential => {
-                const user = userCredential.user;
-                console.log('user: ' + user)
-                //save user to firestore
-
-                setloading(false);
-            }).catch((error): any => {
-                setloading(false);
-                seterror(error.message);
-            }
-            )
+            await auth().createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    const user = userCredential.user;
+                    console.log('user: ' + user)
+                    //save user to firestore
+                    firestore().collection('users').doc(user.uid).set({
+                        email: user.email,
+                        createdAt: firestore.FieldValue.serverTimestamp(),
+                    });
+                    console.log('User registered and added to Firestore!');
+                    setloading(false);
+                }).catch((error): any => {
+                    setloading(false);
+                    seterror(error.message);
+                }
+                )
         }
     }
     return (

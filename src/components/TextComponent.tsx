@@ -2,9 +2,11 @@ import React from 'react';
 import { StyleProp, StyleSheet, Text, TextStyle, } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 import { fontFamilies } from '../constants/fontFamilies';
+import { colors } from '../constants/color';
 
 interface Props {
     text: string,
+    color?: string
     size?: number,
     font?: string,
     flex?: number,
@@ -12,7 +14,7 @@ interface Props {
 }
 
 const TextComponent = (props: Props) => {
-    const { text, font, size, flex, style } = props
+    const { text, color, font, size, flex, style } = props
     return (
         <Text style={[globalStyles.text,
         {

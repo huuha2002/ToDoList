@@ -122,7 +122,7 @@ const HomeScreen = ({ navigation }: any) => {
                         </RowComponent>
                     </CardContentComponent>
                 </SectionComponent>
-                <SpaceComponent height={90} />
+                <SpaceComponent height={70} />
             </Containers>
             <View style={{
                 position: 'absolute',
