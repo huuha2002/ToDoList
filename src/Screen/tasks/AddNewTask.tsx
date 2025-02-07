@@ -50,7 +50,7 @@ const AddNewTask = ({ navigation }: any) => {
             })
     }
 
-    const handleChangeValue = (id: string, value: string | Date) => {
+    const handleChangeValue = (id: string, value: string | string[] | Date) => {
         const item: any = { ...taskDetail }
         item[`${id}`] = value
         settaskDetail(item)
@@ -112,7 +112,7 @@ const AddNewTask = ({ navigation }: any) => {
                     title='Members'
                     selected={taskDetail.uids}
                     items={userSelect}
-                    onSelect={val => console.log(val)}
+                    onSelect={val => handleChangeValue('uids', val)}
                     multible
                 />
             </SectionComponent>
