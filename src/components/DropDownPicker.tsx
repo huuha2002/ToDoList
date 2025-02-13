@@ -95,7 +95,7 @@ const DropDownPicker = (props: Props) => {
             )
         )
     }
-    console.log(items)
+    // console.log(items)
     return (
         <View style={{ marginBottom: 16 }}>
             {title && <TitleComponent text={title} />}
