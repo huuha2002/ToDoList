@@ -3,11 +3,15 @@ import { Image, StyleSheet, View } from 'react-native';
 import RowComponent from './rowComponent';
 import TextComponent from './TextComponent';
 
-const AvatarGroup = () => {
+interface Props {
+    uids?: string[]
+}
+const AvatarGroup = (props: Props) => {
+    const { uids } = props
     const uIdLength = 10
     const imageURL = 'https://s.abcnews.com/images/GMA/john-wick-ht-bb-230216_1676562305682_hpMain_1x1_608.jpg'
     return (
-        <RowComponent styles={{ justifyContent: 'flex-start', paddingLeft:12 }}>
+        <RowComponent styles={{ justifyContent: 'flex-start', paddingLeft: 12 }}>
             {Array.from({ length: uIdLength }).map((item, index) =>
                 index < 3 && (
                     <View key={`image${index}`}>

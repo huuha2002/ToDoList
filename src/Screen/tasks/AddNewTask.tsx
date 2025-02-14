@@ -20,13 +20,15 @@ import axios from 'axios';
 import ButtonComponent from '../../components/ButtonComponent';
 
 const initValue: TaskModel = {
+    id: '',
     title: '',
     description: '',
     dueDate: new Date(),
     start: new Date(),
     end: new Date(),
     uids: [],
-    fileUrls: []
+    fileUrls: [],
+    progress: 0
 }
 const AddNewTask = ({ navigation }: any) => {
     const [taskDetail, settaskDetail] = useState<TaskModel>(initValue);
@@ -69,6 +71,7 @@ const AddNewTask = ({ navigation }: any) => {
     //Add New Task
     const handleAddNewTask = async () => {
         setIsLoading(true);
+        navigation.goBack();
         const URL = []
         // Sử dụng vòng lặp for...of để có thể dùng await
         for (const item of attachments) {
@@ -78,12 +81,11 @@ const AddNewTask = ({ navigation }: any) => {
         console.log('AttachmentsURL: ' + [...URL]);
         const data = {
             ...taskDetail,
-            attachments: [...URL]
+            fileUrls: [...URL]
         }
         await firestore().collection('task').add(data).then(() => {
             console.log('Add New Task Successful!');
             setIsLoading(false);
-            navigation.goBack();
         }).catch(error => console.log('Add new task error: ' + error))
 
     }
