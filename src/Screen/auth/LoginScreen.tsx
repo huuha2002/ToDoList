@@ -10,7 +10,8 @@ import { colors } from '../../constants/color';
 import ButtonComponent from '../../components/ButtonComponent';
 import SpaceComponent from '../../components/SpaceComponent';
 import { globalStyles } from '../../styles/globalStyles';
-import auth from '@react-native-firebase/auth'
+import auth from '@react-native-firebase/auth';
+
 
 const LoginScreen = ({ navigation }: any) => {
     const [email, setemail] = useState('');

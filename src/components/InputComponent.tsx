@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { colors } from '../constants/color';
@@ -9,6 +9,7 @@ import RowComponent from './rowComponent';
 
 interface Props {
     value: string,
+    disable?: boolean,
     onChange?: (val: string) => void
     placeHolder?: string,
     title?: string,
@@ -17,11 +18,18 @@ interface Props {
     allowClear?: boolean,
     multible?: boolean,
     numberOfLine?: number,
-    secure?: boolean
+    secure?: boolean,
+    
 }
 
 const InputComponent = (props: Props) => {
-    const { value, onChange, placeHolder, title, prefix, affix, allowClear, multible, numberOfLine, secure } = props
+    const { value, disable, onChange, placeHolder, title, prefix, affix, allowClear, multible, numberOfLine, secure } = props
+    const inputRef = useRef<TextInput | null>(null);
+
+    // Sử dụng useEffect để focus khi disable là true
+    const handleFocus = () => {
+        inputRef.current?.focus()
+    }
     return (
         <View style={{ marginBottom: 16 }}>
             {title && <TitleComponent text={title} />}
@@ -36,6 +44,8 @@ const InputComponent = (props: Props) => {
                 {prefix && <View style={{ justifyContent: 'center', }}>{prefix}</View>}
                 <View style={{ justifyContent: 'center', flex: 1, paddingLeft: prefix ? 8 : 0, paddingRight: prefix ? 8 : 0 }}>
                     <TextInput
+                        // ref={inputRef}
+                        // editable={disable}
                         style={[globalStyles.text, {
                             margin: 0,
                             padding: 0,
@@ -52,7 +62,7 @@ const InputComponent = (props: Props) => {
                         secureTextEntry={secure}
                     />
                 </View>
-                {affix && <TouchableOpacity>{affix}</TouchableOpacity>}
+                {affix && <TouchableOpacity onPress={handleFocus}>{affix}</TouchableOpacity>}
 
                 {allowClear && value && (
                     <TouchableOpacity onPress={() => onChange?.('')}>

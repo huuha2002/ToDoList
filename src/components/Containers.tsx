@@ -7,7 +7,7 @@ import TextComponent from './TextComponent';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../constants/color';
 import { useNavigation } from '@react-navigation/native';
-import { screensEnabled } from 'react-native-screens';
+import auth from '@react-native-firebase/auth'
 
 
 interface Props {
@@ -32,6 +32,11 @@ const Containers = (props: Props) => {
                             <Ionicons name="arrow-back" size={24} color={colors.text} />
                         </TouchableOpacity>
                         {title && <TextComponent style={{ textAlign: 'center', }} text={title} flex={1} />}
+                        <TouchableOpacity
+                            style={{  }}
+                            onPress={async () => auth().signOut()}>
+                            <Ionicons name="log-out-outline" size={24} color='coral' />
+                        </TouchableOpacity>
                     </RowComponent>
                 </SectionComponent>
             )}

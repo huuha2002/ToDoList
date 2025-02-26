@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import Containers from '../../components/Containers';
 import { globalStyles } from '../../styles/globalStyles';
 import RowComponent from '../../components/rowComponent';
@@ -21,12 +21,27 @@ import ButtonComponent from '../../components/ButtonComponent';
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore';
 import { TaskModel } from '../../Models/TaskModel';
-import { any } from 'prop-types';
+import { NativeModules } from 'react-native';
 
 const HomeScreen = ({ navigation }: any) => {
+    const { CameraModule } = NativeModules;
     const [isLoading, setisLoading] = useState(false);
-    const [task, setTask] = useState<TaskModel[]>([])
+    const [task, setTask] = useState<TaskModel[]>([]);
+    const [imageUri, setImageUri] = useState();
     const user = auth().currentUser;
+
+    //Camera Module
+    const captureImage = async () => {
+        try {
+            const imageUri = await CameraModule.captureImage();
+            setImageUri(imageUri)
+            console.log('Image captured:', imageUri);
+            return imageUri;
+        } catch (error) {
+            console.error('Failed to capture image:', error);
+            throw error;
+        }
+    }
 
     //Get Task
     useEffect(() => {
@@ -35,7 +50,7 @@ const HomeScreen = ({ navigation }: any) => {
     const getNewTask = async () => {
         setisLoading(true);
         await firestore().collection('task').orderBy('dueDate').limit(3).onSnapshot(snap => {
-            if (snap.empty) {
+            if (!snap) {
                 console.log('Tasks not found!');
             } else {
                 const items: TaskModel[] = [];
@@ -52,9 +67,15 @@ const HomeScreen = ({ navigation }: any) => {
     return (
         <View style={{ flex: 1 }}>
             <Containers scrollEnable>
+                {imageUri && <Image
+                    source={{ uri: `data:image/png;base64,${imageUri}` }}
+                    style={{ width: 200, height: 200 }}
+                />}
                 <SectionComponent>
                     <RowComponent justify='space-between'>
-                        <Ionicons name="menu-sharp" size={24} color={colors.desc} />
+                        <TouchableOpacity onPress={captureImage}>
+                            <Ionicons name="menu-sharp" size={24} color={colors.desc} />
+                        </TouchableOpacity>
                         <Ionicons name="notifications" size={24} color={colors.desc} />
                     </RowComponent>
                 </SectionComponent>
@@ -64,10 +85,14 @@ const HomeScreen = ({ navigation }: any) => {
                             <TextComponent text={`Hi, ${user?.email}!`} />
                             <TitleComponent text='Be Productive today!' />
                         </View>
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={{ alignSelf: 'flex-start' }}
                             onPress={async () => auth().signOut()}>
                             <Ionicons name="log-out-outline" size={24} color={colors.text} />
+                        </TouchableOpacity> */}
+                        <TouchableOpacity style={{ alignSelf: 'flex-start' }}
+                            onPress={() => navigation.navigate('UserInfoScreen')}>
+                            <Ionicons name="person-sharp" size={24} color={colors.text} />
                         </TouchableOpacity>
                     </RowComponent>
                 </SectionComponent>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Button, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import TitleComponent from './TitleComponent';
 import RowComponent from './rowComponent';
@@ -15,18 +15,23 @@ interface Props {
     title?: string,
     placeholder?: string,
     selected?: Date,
-    onSelected: (val: Date) => void
+    onSelected: (val: Date) => void,
+    disabled?: boolean,
+    prefix?: ReactNode,
 }
 
 const DateTimePickerComponent = (props: Props) => {
-    const { type, title, placeholder, selected, onSelected } = props
+    const { type, title, placeholder, selected, onSelected, disabled, prefix } = props
     const [isVisibleModelDateTime, setisVisibleModelDateTime] = useState(false);
     const [date, setDate] = useState(selected ?? new Date())
     const [open, setOpen] = useState(false)
     return (
         <>
             <View style={{ marginBottom: 16 }}>
-                {title && <TitleComponent text={title}></TitleComponent>}
+                <RowComponent justify='space-between'>
+                    {title && <TitleComponent text={title}></TitleComponent>}
+                    {prefix && prefix}
+                </RowComponent>
                 <RowComponent
                     onPress={() => {
                         setisVisibleModelDateTime(true)
@@ -50,7 +55,7 @@ const DateTimePickerComponent = (props: Props) => {
             <View>
                 <DatePicker
                     modal
-                    open={open}
+                    open={disabled ?? open}
                     mode={type ? type : 'datetime'}
                     date={date}
                     onDateChange={val => setDate(val)}
