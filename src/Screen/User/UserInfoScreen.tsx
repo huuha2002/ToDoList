@@ -109,9 +109,15 @@ const UserInfoScreen = () => {
                 });
         }
     };
-
+    const logOut = (
+        <TouchableOpacity
+            style={{}}
+            onPress={async () => auth().signOut()}>
+            <Ionicons name="log-out-outline" size={24} color='coral' />
+        </TouchableOpacity>
+    )
     return (
-        <Containers scrollEnable back>
+        <Containers scrollEnable back right={logOut} >
             <SectionComponent >
                 <RowComponent>
                     <AvataImage uri={imageUri} onChange={val => setimageUri(val?.uri || '')} />
@@ -154,6 +160,7 @@ const UserInfoScreen = () => {
                     affix={<Ionicons name="pencil" size={20} color={colors.text} />}
                     onChange={val => setaddress(val)} />
                 <ButtonComponent text='Save' onPress={handleSave} />
+                <SpaceComponent height={40}/>
             </SectionComponent>
         </Containers>
     );

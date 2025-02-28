@@ -130,7 +130,11 @@ const HomeScreen = ({ navigation }: any) => {
                             <RowComponent styles={{ alignItems: 'flex-start' }}>
                                 {task[0] &&
                                     <View style={{ flex: 1, }}>
-                                        <CardImageComponent>
+                                        <CardImageComponent onPress={() => navigation.navigate('TaskDetail',
+                                            {
+                                                id: task[0].id,
+                                                color: 'rgba(113, 77, 217, 0.9)'
+                                            })}>
                                             <TouchableOpacity
                                                 style={[globalStyles.iconContainer]}>
                                                 <MaterialIcons name="edit" size={20} color={colors.text} />
@@ -155,7 +159,13 @@ const HomeScreen = ({ navigation }: any) => {
                                 <SpaceComponent width={16} />
 
                                 {task[1] && <View style={{ flex: 1 }}>
-                                    <CardImageComponent color='rgba(50, 150, 243, 0.9)'>
+                                    <CardImageComponent
+                                        onPress={() => navigation.navigate('TaskDetail',
+                                            {
+                                                id: task[1].id,
+                                                color: 'rgba(50, 150, 243, 0.9)'
+                                            })}
+                                        color='rgba(50, 150, 243, 0.9)'>
                                         <TouchableOpacity
                                             style={[globalStyles.iconContainer]}>
                                             <MaterialIcons name="edit" size={20} color={colors.text} />
@@ -171,7 +181,13 @@ const HomeScreen = ({ navigation }: any) => {
                                     </CardImageComponent>
                                     <SpaceComponent height={16} />
                                     {task[2] &&
-                                        <CardImageComponent color='rgba(25, 234, 112, 0.9)'>
+                                        <CardImageComponent
+                                            onPress={() => navigation.navigate('TaskDetail',
+                                                {
+                                                    id: task[2].id,
+                                                    color: 'rgba(25, 234, 112, 0.9)'
+                                                })}
+                                            color='rgba(25, 234, 112, 0.9)'>
                                             <TouchableOpacity
                                                 style={[globalStyles.iconContainer]}>
                                                 <MaterialIcons name="edit" size={20} color={colors.text} />
@@ -199,11 +215,11 @@ const HomeScreen = ({ navigation }: any) => {
                         </RowComponent>
                     </CardContentComponent>
                 </SectionComponent>
-                <SpaceComponent height={70} />
+                <SpaceComponent height={100} />
             </Containers>
             <View style={{
                 position: 'absolute',
-                bottom: 0,
+                bottom: 30,
                 left: 0,
                 right: 0,
                 padding: 20
