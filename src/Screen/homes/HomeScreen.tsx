@@ -140,7 +140,9 @@ const HomeScreen = ({ navigation }: any) => {
                                                 <MaterialIcons name="edit" size={20} color={colors.text} />
                                             </TouchableOpacity>
                                             <TitleComponent text={task[0].title} size={18} />
-                                            <TextComponent text={task[0].description} />
+                                            <TextComponent
+                                            numbOfLine={2}
+                                            text={task[0].description} />
                                             <View style={{ marginVertical: 28 }}>
                                                 {task[0].uids && <AvatarGroup uids={task[0].uids}></AvatarGroup>}
                                                 {task[0].progress && <ProgressBarComponent percent={task[0].progress} />}
