@@ -14,7 +14,7 @@ const ProgressBarComponent = (props: Props) => {
     const { size, color, percent, title } = props
     const heightSize = size === 'small' ? 6 : size === 'large' ? 10 : 8;
     return (
-        <View style={{ marginTop: 12, marginBottom: 16 }}>
+        <View style={{ marginTop: 12, }}>
             <View style={{
                 height: heightSize ?? 8,
                 width: '100%',
@@ -23,7 +23,7 @@ const ProgressBarComponent = (props: Props) => {
             }}>
                 <View style={{
                     height: heightSize ?? 8,
-                    width: `${percent}%`,
+                    width: `${Math.floor(percent)}%`,
                     backgroundColor: color ?? percent >= 90 ? colors.success : percent >= 60 ? '#3498db' : percent >= 20 ? 'coral' : 'red',
                     borderRadius: 100,
 
@@ -31,7 +31,7 @@ const ProgressBarComponent = (props: Props) => {
             </View>
             {title && <RowComponent justify='space-between' styles={{ marginTop: 4 }}>
                 <TextComponent text='Progress' size={12} />
-                <TextComponent font={fontFamilies.bold} text={percent + '%'} size={12} flex={0} />
+                <TextComponent font={fontFamilies.bold} text={Math.floor(percent) + '%'} size={12} flex={0} />
             </RowComponent>}
         </View>
 
