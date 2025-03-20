@@ -27,7 +27,7 @@ const initValue: TaskModel = {
     start: new Date(),
     end: new Date(),
     uids: [],
-    fileUrls: [],
+    attachments: [],
     progress: 0
 }
 const AddNewTask = ({ navigation }: any) => {
@@ -81,7 +81,7 @@ const AddNewTask = ({ navigation }: any) => {
         console.log('AttachmentsURL: ' + [...URL]);
         const data = {
             ...taskDetail,
-            fileUrls: [...URL]
+            attachments: [...URL]
         }
         await firestore().collection('task').add(data).then(() => {
             console.log('Add New Task Successful!');

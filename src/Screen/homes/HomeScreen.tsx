@@ -59,7 +59,7 @@ const HomeScreen = ({ navigation }: any) => {
                     ...item.data()
                 }))
                 setisLoading(false);
-                console.log('New Tasks: ' + JSON.stringify(items));
+                // console.log('New Tasks: ' + JSON.stringify(items));
                 setTask(items);
             }
         })
