@@ -145,7 +145,12 @@ const HomeScreen = ({ navigation }: any) => {
                                                 text={task[0].description} />
                                             <View style={{ marginVertical: 28 }}>
                                                 {task[0].uids && <AvatarGroup uids={task[0].uids}></AvatarGroup>}
-                                                {task[0].progress && <ProgressBarComponent title percent={Math.floor(task[0].progress * 100)} />}
+                                                {task[0]?.progress !== undefined && (
+                                                    <ProgressBarComponent
+                                                        title
+                                                        percent={Math.floor((Number(task[0].progress ?? 0) * 100))}
+                                                    />
+                                                )}
                                             </View>
                                             <TextComponent
                                                 text={`Due ${task[0].dueDate instanceof firestore.Timestamp
@@ -175,7 +180,12 @@ const HomeScreen = ({ navigation }: any) => {
                                         <TitleComponent text={task[1].title} size={18} />
                                         <TextComponent text={task[1].description} />
                                         <AvatarGroup uids={task[1].uids}></AvatarGroup>
-                                        {task[1].progress && <ProgressBarComponent title percent={Math.floor(task[1].progress * 100)} />}
+                                        {task[1]?.progress !== undefined && (
+                                            <ProgressBarComponent
+                                                title
+                                                percent={Math.floor((Number(task[1].progress ?? 0) * 100))}
+                                            />
+                                        )}
                                         <TextComponent text={`Due ${task[1].dueDate instanceof firestore.Timestamp
                                             ? task[1].dueDate.toDate().toDateString() // Chuyển đổi Firestore Timestamp thành Date
                                             : new Date(task[1].dueDate).toDateString() // Nếu dueDate đã là Date
@@ -197,7 +207,12 @@ const HomeScreen = ({ navigation }: any) => {
                                             <TitleComponent text={task[2].title} size={18} />
                                             <TextComponent text={task[2].description} />
                                             <AvatarGroup uids={task[2].uids}></AvatarGroup>
-                                            {task[2].progress && <ProgressBarComponent title percent={Math.floor(task[2].progress * 100)} />}
+                                            {task[2]?.progress !== undefined && (
+                                                    <ProgressBarComponent
+                                                        title
+                                                        percent={Math.floor((Number(task[2].progress ?? 0) * 100))}
+                                                    />
+                                                )}
                                             <TextComponent text={`Due ${task[2].dueDate instanceof firestore.Timestamp
                                                 ? task[2].dueDate.toDate().toDateString() // Chuyển đổi Firestore Timestamp thành Date
                                                 : new Date(task[1].dueDate).toDateString() // Nếu dueDate đã là Date
@@ -223,11 +238,11 @@ const HomeScreen = ({ navigation }: any) => {
                         </RowComponent>
                     </CardContentComponent>
                 </SectionComponent>
-                <SpaceComponent height={100} />
+                <SpaceComponent height={60} />
             </Containers>
             <View style={{
                 position: 'absolute',
-                bottom: 30,
+                bottom: 0,
                 left: 0,
                 right: 0,
                 padding: 20

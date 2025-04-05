@@ -21,7 +21,7 @@ const ButtonComponent = (props: Props) => {
             <TouchableOpacity
                 disabled={disabled}
                 onPress={onPress ? () => onPress() : undefined}
-                activeOpacity={1}
+                // activeOpacity={1}
                 style={[{
                     backgroundColor: disabled ? colors.gray : bgColor ?? '#3498db',
                     justifyContent: 'center',

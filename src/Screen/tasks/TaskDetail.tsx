@@ -24,6 +24,9 @@ import ButtonComponent from '../../components/ButtonComponent';
 import UploadFileComponent from '../../components/UploadFileComponent';
 import { DocumentPickerResponse } from 'react-native-document-picker';
 import axios from 'axios';
+import { CalcFileSize } from '../../utils/CalcFileSize';
+import ModalAddSubtasks from '../../Modals/ModalAddSubtasks';
+import { string } from 'prop-types';
 
 const TaskDetail = ({ navigation, route }: any) => {
     // console.log(route);
@@ -35,10 +38,13 @@ const TaskDetail = ({ navigation, route }: any) => {
     const [isChanged, setisChanged] = useState(false);
     const [files, setFiles] = useState<DocumentPickerResponse[]>([])
     const [loading, setloading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number[]>([]); // Mảng lưu tiến trình của từng file
+    const [modelVisible, setModelVisible] = useState(false);
     // console.log('File: ', files.length);
 
     useEffect(() => {
         getTaskDetail();
+        getSubTasks();
     }, []);
     useEffect(() => {
         if (tasktDetail)
@@ -53,14 +59,34 @@ const TaskDetail = ({ navigation, route }: any) => {
     useEffect(() => {
         if (
             progress !== tasktDetail?.progress ||
-            fileUrls.length !== tasktDetail?.attachments.length
+            fileUrls.length !== tasktDetail?.attachments.length ||
+            files.length !== 0
         ) {
             setisChanged(true);
         } else {
             setisChanged(false);
         }
-        console.log('fileUrl', fileUrls);
-    }, [progress, fileUrls, tasktDetail]);
+        // console.log('fileUrl', fileUrls);
+    }, [progress, fileUrls, tasktDetail, files]);
+    useEffect(() => {
+        const calculateProgress = () => {
+            if (!subTasks || subTasks.length === 0) {
+                setprogress(0);
+                return;
+            }
+
+            const completedTasks = subTasks.filter(e => e.isCompleted).length;
+            const totalTasks = subTasks.length;
+            const completedPercent = totalTasks > 0 ? completedTasks / totalTasks : 0;
+
+            // Đảm bảo progress là số hợp lệ
+            const safeProgress = Math.min(1, Math.max(0, Number(completedPercent) || 0))
+            setprogress(safeProgress);
+        };
+
+        calculateProgress();
+    }, [subTasks]);
+
     const getTaskDetail = () => {
         const unsubscribe = firestore().doc(`task/${id}`).onSnapshot(
             (snap: any) => {
@@ -78,12 +104,41 @@ const TaskDetail = ({ navigation, route }: any) => {
                 console.error('Error listening to task detail:', error);
             }
         );
-
+        getSubTasks();
         // Trả về hàm unsubscribe để dọn dẹp listener khi không cần thiết
         return unsubscribe;
     };
+
+    const getSubTasks = () => {
+        const unsubscribe = firestore().collection('subTasks')
+            .where('taskId', '==', id)
+            .onSnapshot(
+                (snap: any) => {
+                    // console.log('subtasks: ', snap.data);
+                    if (!snap.empty) {
+                        const subtasksData: any[] = [];
+                        snap.forEach((doc: any) => {
+                            subtasksData.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        });
+                        setsubTasks(subtasksData);
+
+                    } else {
+                        console.log('Subtasks not found!');
+                    }
+                },
+                (error) => {
+                    console.error('Error listening to subtasks:', error);
+                }
+            );
+
+        // Trả về hàm unsubscribe để dọn dẹp listener khi không cần thiết
+        return unsubscribe;
+    }
     // console.log(tasktDetail);
-    const handleUploadFileToStorage = async (item: DocumentPickerResponse) => {
+    const handleUploadFileToStorage = async (item: DocumentPickerResponse, index: number) => {
         const fileName = item.name ?? `file${Date.now()}`;
         const items = [...fileUrls];
 
@@ -105,6 +160,19 @@ const TaskDetail = ({ navigation, route }: any) => {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percentCompleted = Math.round(
+                                (progressEvent.loaded * 100) / progressEvent.total
+                            );
+                            // Cập nhật tiến trình của file tại vị trí index
+                            setUploadProgress((prevProgress) => {
+                                const newProgress = [...prevProgress];
+                                newProgress[index] = percentCompleted;
+                                return newProgress;
+                            });
+                        }
+                    },
                 }
             );
 
@@ -121,7 +189,7 @@ const TaskDetail = ({ navigation, route }: any) => {
             fileData.url = url;
             fileData.size = item?.size ?? 0;
             fileData.type = item?.type ?? '';
-            console.log('FILE DATA: ', fileData);
+            // console.log('FILE DATA: ', fileData);
             items.push(fileData);
 
             setfileUrl(items);
@@ -145,10 +213,11 @@ const TaskDetail = ({ navigation, route }: any) => {
             setloading(true);
             const URL = []
             // Sử dụng vòng lặp for...of để có thể dùng await
-            for (const item of files) {
-                const fileUrl = await handleUploadFileToStorage(item); // Đợi kết quả upload
-                console.log('file URL after Upload: ', fileUrl);
-                URL.push(fileUrl); // Thêm URL vào mảng
+            for (let i = 0; i < files.length; i++) {
+                const fileUrl = await handleUploadFileToStorage(files[i], i); // Truyền index của file
+                if (fileUrl) {
+                    URL.push(fileUrl);
+                }
             }
             // Wait for state to update
             await new Promise(resolve => setTimeout(resolve, 0));
@@ -166,6 +235,25 @@ const TaskDetail = ({ navigation, route }: any) => {
         setloading(false)
     }
 
+    const handleTaskCompleted = async (id: string, isCompleted: boolean) => {
+        try {
+            // Cập nhật UI trước
+            const updatedSubtasks = subTasks.map(task =>
+                task.id === id ? { ...task, isCompleted: !isCompleted } : task
+            );
+            setsubTasks(updatedSubtasks);
+
+            // Sau đó mới cập nhật Firestore
+            await firestore().doc(`subTasks/${id}`).update({
+                isCompleted: !isCompleted
+            });
+        } catch (error) {
+            console.log('Update task completed error: ', error);
+            // Rollback nếu có lỗi
+            setsubTasks(subTasks);
+        }
+    }
+
     //DELETE ATTACHMENTS
     const deleteAttachment = (type: String, index: any) => {
         if (type === 'fileUrls') {
@@ -179,170 +267,222 @@ const TaskDetail = ({ navigation, route }: any) => {
 
     }
     return tasktDetail ? (
-        !loading ?
-            <View style={[globalStyles.container, { paddingTop: 0 }]}>
-                <ScrollView >
-                    <SectionComponent styles={{
-                        backgroundColor: color,
-                        paddingVertical: 20,
-                        paddingTop: 40,
-                        borderBottomLeftRadius: 20,
-                        borderBottomRightRadius: 20
-                    }}>
-                        <RowComponent justify='space-between'>
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <Ionicons name="arrow-back" size={24} color={colors.text} />
-                            </TouchableOpacity>
-                        </RowComponent>
-                        <SpaceComponent height={10} />
-                        <TextComponent text='Due Date' />
-                        <RowComponent justify='flex-start' styles={{ marginTop: 12 }}>
-                            <RowComponent styles={{ flex: 1 }}>
-                                <Ionicons name="alarm-outline" size={18} color={colors.text} />
-                                <SpaceComponent width={5} />
-                                <TextComponent
-                                    flex={0}
-                                    size={12}
-                                    text={`${HandleDateTime.GetHour(tasktDetail.start)}`} />
-                                <TextComponent text=' : ' flex={0} />
-                                <TextComponent
-                                    flex={0}
-                                    size={12}
-                                    text={`${HandleDateTime.GetHour(tasktDetail.end)}`} />
-                            </RowComponent>
-                            <RowComponent styles={{ flex: 1 }}>
-                                <Ionicons name="calendar-outline" size={18} color={colors.text} />
-                                <SpaceComponent width={5} />
-                                <TextComponent flex={0} size={12} text={HandleDateTime.DateString(tasktDetail.dueDate)} />
-                            </RowComponent>
-                            <RowComponent justify='flex-end' styles={{ flex: 1 }}>
-                                <AvatarGroup uids={tasktDetail.uids} />
-                            </RowComponent>
-                        </RowComponent>
-                    </SectionComponent>
-                    <SectionComponent>
-                        <TitleComponent text='Description' />
-                        <CardContentComponent
-                            styles={{
-                                borderWidth: 1,
-                                borderColor: colors.gray,
-                                borderRadius: 12,
-                                marginTop: 12,
-                                padding: 20
-                            }}
-                            bgColor={colors.bgColor}>
-                            <TextComponent text={tasktDetail.description} />
-                        </CardContentComponent>
-                    </SectionComponent>
-                    <SectionComponent>
-                        <RowComponent>
-                            <TitleComponent text='Files & Links' flex={1} />
-                            <UploadFileComponent onUpload={file => {
-                                setFiles([...files, file])
-                            }} />
-                        </RowComponent>
-                    </SectionComponent>
-                    <SectionComponent>
-                        <RowComponent>
-                            <View
-                                style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderColor: colors.success,
-                                    borderRadius: 100,
-                                    borderWidth: 2.5,
-                                    marginRight: 4,
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <View style={{
-                                    width: 16,
-                                    height: 16,
-                                    borderRadius: 100,
-                                    backgroundColor: colors.success
-                                }} />
-                            </View>
+        // !loading ?
+        <View style={[globalStyles.container, { paddingTop: 0 }]}>
+            <ScrollView >
+                <SectionComponent styles={{
+                    backgroundColor: color,
+                    paddingVertical: 20,
+                    paddingTop: 40,
+                    borderBottomLeftRadius: 20,
+                    borderBottomRightRadius: 20
+                }}>
+                    <RowComponent justify='space-between'>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Ionicons name="arrow-back" size={24} color={colors.text} />
+                        </TouchableOpacity>
+                    </RowComponent>
+                    <SpaceComponent height={10} />
+                    <TextComponent text='Due Date' />
+                    <RowComponent justify='flex-start' styles={{ marginTop: 12 }}>
+                        <RowComponent styles={{ flex: 1 }}>
+                            <Ionicons name="alarm-outline" size={18} color={colors.text} />
+                            <SpaceComponent width={5} />
                             <TextComponent
-                                text='Progress'
-                                font={fontFamilies.medium}
-                                size={18}
-                                flex={1} />
+                                flex={0}
+                                size={12}
+                                text={`${HandleDateTime.GetHour(tasktDetail.start)}`} />
+                            <TextComponent text=' : ' flex={0} />
+                            <TextComponent
+                                flex={0}
+                                size={12}
+                                text={`${HandleDateTime.GetHour(tasktDetail.end)}`} />
                         </RowComponent>
-                        <SpaceComponent height={10} />
-                        <RowComponent>
-                            <View style={{ flex: 1, marginRight: 5 }}>
-                                <Slider
-                                    value={progress}
-                                    onValueChange={val => setprogress(val[0])}
-                                    maximumTrackTintColor={colors.gray}
-                                    minimumTrackTintColor={colors.success}
-                                    thumbTintColor={colors.success}
-                                    trackStyle={{
-                                        height: 10,
-                                        borderRadius: 100
-                                    }}
-                                    thumbStyle={{
-                                        borderWidth: 2,
-                                        borderColor: colors.text
-                                    }}
-                                />
-                            </View>
-                            <TextComponent flex={0} text={`${Math.floor(progress * 100)}%`} font={fontFamilies.bold} size={18} />
+                        <RowComponent styles={{ flex: 1 }}>
+                            <Ionicons name="calendar-outline" size={18} color={colors.text} />
+                            <SpaceComponent width={5} />
+                            <TextComponent flex={0} size={12} text={HandleDateTime.DateString(tasktDetail.dueDate)} />
                         </RowComponent>
+                        <RowComponent justify='flex-end' styles={{ flex: 1 }}>
+                            <AvatarGroup uids={tasktDetail.uids} />
+                        </RowComponent>
+                    </RowComponent>
+                </SectionComponent>
+                <SectionComponent>
+                    <TitleComponent text='Description' />
+                    <CardContentComponent
+                        styles={{
+                            borderWidth: 1,
+                            borderColor: colors.gray,
+                            borderRadius: 12,
+                            marginTop: 12,
+                            padding: 20
+                        }}
+                        bgColor={colors.bgColor}>
+                        <TextComponent text={tasktDetail?.description || 'No description'} />
+                    </CardContentComponent>
+                </SectionComponent>
+                <SectionComponent>
+                    <RowComponent>
+                        <TitleComponent text='Files & Links' flex={1} />
+                        <UploadFileComponent onUpload={file => {
+                            setFiles([...files, file])
+                        }} />
+                    </RowComponent>
+                    {
+                        fileUrls && fileUrls.map((item, index) => (
+                            <CardContentComponent key={`fileUrl-${item.url}-${index}`} styles={{ marginBlock: 5 }}>
+                                <RowComponent justify='flex-start'>
+                                    <FontAwesome style={{ flex: 0 }} name="check-circle" size={24} color={colors.success} />
+                                    <SpaceComponent width={10} />
+                                    <View style={{ flex: 1 }}>
+                                        <TextComponent size={11} numbOfLine={1} text={item.name ?? ''} />
+                                        <TextComponent size={11} text={CalcFileSize(item.size)} />
+                                    </View>
+                                    <TouchableOpacity onPress={() => deleteAttachment('fileUrls', index)}>
+                                        <AntDesign name="close" size={22} color={colors.text} />
+                                    </TouchableOpacity>
+                                </RowComponent>
+                            </CardContentComponent>
+                        ))
+                    }
+                    {
+                        files && files.map((item, index) => (
+                            <CardContentComponent key={`file${index}`} styles={{ marginBlock: 5 }}>
+                                <RowComponent styles={{}}>
+                                    <FontAwesome style={{ flex: 0 }} name="check-circle" size={24} color={colors.text} />
+                                    <SpaceComponent width={10} />
+                                    <View style={{ flex: 1 }}>
+                                        <TextComponent size={11} numbOfLine={1} text={item.name ?? ''} />
+                                        <TextComponent size={11} text={CalcFileSize(item.size ?? 0)} />
+                                    </View>
+                                    <TouchableOpacity onPress={() => deleteAttachment('files', index)}>
+                                        <AntDesign name="close" size={22} color={colors.text} />
+                                    </TouchableOpacity>
+                                </RowComponent>
+                                {uploadProgress[index] > 0 &&
+                                    <View >
+                                        <ProgressBarComponent
+                                            percent={uploadProgress[index] || 0} // Sử dụng tiến trình của file tại index
+                                            color={colors.success}
+                                            size="small"
+                                        />
+                                        {/* <TextComponent
+                                        text={`${uploadProgress[index] || 0}%`}
+                                        size={12}
+                                        color={colors.text}
+                                        style={{ textAlign: 'center', marginTop: 5 }}
+                                    /> */}
+                                    </View>
+                                }
+                            </CardContentComponent>
+                        ))
+                    }
+                </SectionComponent>
+                <SectionComponent>
+                    <RowComponent>
+                        <View
+                            style={{
+                                width: 24,
+                                height: 24,
+                                borderColor: colors.success,
+                                borderRadius: 100,
+                                borderWidth: 2.5,
+                                marginRight: 4,
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <View style={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 100,
+                                backgroundColor: colors.success
+                            }} />
+                        </View>
+                        <TextComponent
+                            text='Progress'
+                            font={fontFamilies.medium}
+                            size={18}
+                            flex={1} />
+                    </RowComponent>
+                    <SpaceComponent height={10} />
+                    <RowComponent>
+                        <View style={{ flex: 1, marginRight: 5 }}>
+                            <Slider
+                                disabled
+                                value={progress}
+                                onValueChange={val => setprogress(val[0])}
+                                maximumTrackTintColor={colors.gray}
+                                minimumTrackTintColor={colors.success}
+                                thumbTintColor={colors.success}
+                                trackStyle={{
+                                    height: 10,
+                                    borderRadius: 100
+                                }}
+                                thumbStyle={{
+                                    borderWidth: 2,
+                                    borderColor: colors.text
+                                }}
+                            />
+                        </View>
+                        <TextComponent
+                            flex={0}
+                            text={`${Math.round((Number(progress) || 0) * 100)}%`}
+                            font={fontFamilies.bold}
+                            size={18}
+                        />
+                    </RowComponent>
 
-                    </SectionComponent>
-                    <SectionComponent>
-                        <RowComponent>
-                            <TitleComponent flex={1} text='Sub Tasks' />
-                            <TouchableOpacity>
-                                <Ionicons name="add-circle-outline" size={24} color={colors.text} />
+                </SectionComponent>
+                <SectionComponent>
+                    <RowComponent>
+                        <TitleComponent flex={1} text='Sub Tasks' />
+                        <TouchableOpacity onPress={() => setModelVisible(true)}>
+                            <Ionicons name="add-circle-outline" size={24} color={colors.text} />
+                        </TouchableOpacity>
+                    </RowComponent>
+                    {
+                        subTasks && subTasks.map((item, index) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                onPress={() => handleTaskCompleted(item.id, item.isCompleted)}>
+                                <CardContentComponent key={`subtask${index}`} styles={{ marginBlock: 5 }}>
+                                    <RowComponent styles={{}}>
+                                        {item.isCompleted ? <FontAwesome style={{ flex: 0 }} name="check-circle" size={24} color={colors.success} />
+                                            : <FontAwesome style={{ flex: 0 }} name="check-circle-o" size={24} color={colors.success} />}
+
+                                        <SpaceComponent width={10} />
+                                        <View style={{ flex: 1 }}>
+                                            <TextComponent numbOfLine={1} text={item.title ?? 'No title'} />
+                                            <TextComponent size={12} text={HandleDateTime.DateString(new Date(item.createAt))} />
+                                        </View>
+                                        {/* <TouchableOpacity onPress={() => deleteAttachment('fileUrls', index)}>
+                                        <AntDesign name="close" size={22} color={colors.text} />
+                                    </TouchableOpacity> */}
+                                    </RowComponent>
+                                </CardContentComponent>
                             </TouchableOpacity>
-                        </RowComponent>
-                        {
-                            fileUrls && fileUrls.map((item, index) => (
-                                <CardContentComponent key={`subtask${index}`} styles={{ marginBlock: 5 }}>
-                                    <RowComponent styles={{}}>
-                                        <FontAwesome style={{ flex: 0 }} name="check-circle" size={24} color={colors.success} />
-                                        <SpaceComponent width={10} />
-                                        <TextComponent numbOfLine={1} text={item.name ?? ''} />
-                                        <TouchableOpacity onPress={() => deleteAttachment('fileUrls', index)}>
-                                            <AntDesign name="close" size={22} color={colors.text} />
-                                        </TouchableOpacity>
-                                    </RowComponent>
-                                </CardContentComponent>
-                            ))
-                        }
-                        {
-                            files && files.map((item, index) => (
-                                <CardContentComponent key={`subtask${index}`} styles={{ marginBlock: 5 }}>
-                                    <RowComponent styles={{}}>
-                                        <FontAwesome style={{ flex: 0 }} name="check-circle" size={24} color={colors.gray} />
-                                        <SpaceComponent width={10} />
-                                        <TextComponent numbOfLine={1} text={item.name ?? ''} />
-                                        <TouchableOpacity onPress={() => deleteAttachment('files', index)}>
-                                            <AntDesign name="close" size={22} color={colors.text} />
-                                        </TouchableOpacity>
-                                    </RowComponent>
-                                </CardContentComponent>
-                            ))
-                        }
-                    </SectionComponent>
-                    <SpaceComponent height={100} />
-                </ScrollView>
-                {isChanged &&
-                    <View style={{
-                        position: 'absolute',
-                        bottom: 60,
-                        left: 20,
-                        right: 20,
-                        flex: 1
-                    }}>
-                        <ButtonComponent text='UPDATE' onPress={handleUpdateTask} />
-                    </View>
-                }
-            </View>
-            : <ActivityIndicator style={{ flex: 1 }} />
+                        ))
+                    }
+
+                </SectionComponent>
+                <SpaceComponent height={100} />
+            </ScrollView>
+            {isChanged &&
+                <View style={{
+                    position: 'absolute',
+                    bottom: 60,
+                    left: 20,
+                    right: 20,
+                    flex: 1
+                }}>
+                    <ButtonComponent text='UPDATE' onPress={handleUpdateTask} />
+                </View>
+            }
+            <ModalAddSubtasks taskId={tasktDetail.id} visible={modelVisible} onClose={() => setModelVisible(false)} />
+        </View>
+        // : <ActivityIndicator style={{ flex: 1 }} />
     ) : (<></>);
 }
 

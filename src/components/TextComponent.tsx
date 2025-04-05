@@ -21,6 +21,7 @@ const TextComponent = (props: Props) => {
             numberOfLines={numbOfLine && numbOfLine}
             style={[globalStyles.text,
             {
+                color: color ? color : colors.text,
                 flex: flex ?? 1,
                 fontSize: size ?? 16,
                 fontFamily: font ?? fontFamilies.regular,

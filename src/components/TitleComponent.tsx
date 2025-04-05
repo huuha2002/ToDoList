@@ -16,6 +16,7 @@ const TitleComponent = (props: Props) => {
     const { text, font, size, color, styles, flex } = props
     return (
         <TextComponent
+            color={color}
             text={text}
             font={font ?? fontFamilies.semiBold}
             size={size ?? 18}

@@ -15,7 +15,9 @@ const UploadFileComponent = (props: Props) => {
     const [isVisibleModelUpload, setisVisibleModelUpload] = useState(false);
     return (
         <>
-            <TouchableOpacity onPress={() => DocumentPicker.pick({}).then(res => {
+            <TouchableOpacity onPress={() => DocumentPicker.pick({
+                allowMultiSelection: false
+            }).then(res => {
                 // setfile(res[0])
                 console.log(res[0]);
                 onUpload(res[0])

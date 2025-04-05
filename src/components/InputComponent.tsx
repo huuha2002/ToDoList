@@ -19,11 +19,12 @@ interface Props {
     multible?: boolean,
     numberOfLine?: number,
     secure?: boolean,
-    
+    bgColor?: string,
+    textColor?: string
 }
 
 const InputComponent = (props: Props) => {
-    const { value, disable, onChange, placeHolder, title, prefix, affix, allowClear, multible, numberOfLine, secure } = props
+    const { value, disable, onChange, placeHolder, title, prefix, affix, allowClear, multible, numberOfLine, secure, bgColor, textColor } = props
     const inputRef = useRef<TextInput | null>(null);
 
     // Sử dụng useEffect để focus khi disable là true
@@ -32,14 +33,14 @@ const InputComponent = (props: Props) => {
     }
     return (
         <View style={{ marginBottom: 16 }}>
-            {title && <TitleComponent text={title} />}
+            {title && <TitleComponent text={title} color={textColor ? textColor : colors.text} />}
             <RowComponent styles={[globalStyles.inputComponent, {
                 marginTop: title ? 4 : 0,
                 minHeight: multible && numberOfLine ? numberOfLine * 32 : 32,
                 paddingVertical: 14,
                 paddingHorizontal: 10,
                 alignItems: 'flex-start',
-
+                backgroundColor: bgColor ? bgColor : colors.gray
             }]}>
                 {prefix && <View style={{ justifyContent: 'center', }}>{prefix}</View>}
                 <View style={{ justifyContent: 'center', flex: 1, paddingLeft: prefix ? 8 : 0, paddingRight: prefix ? 8 : 0 }}>
@@ -51,7 +52,7 @@ const InputComponent = (props: Props) => {
                             padding: 0,
                             flex: 0,
                             // paddingVertical: 4,
-
+                            color: textColor ? textColor : colors.text
                         }]}
                         placeholder={placeHolder ?? ''}
                         placeholderTextColor={'#676767'}
