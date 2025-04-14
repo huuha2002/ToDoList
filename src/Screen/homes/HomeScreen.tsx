@@ -49,9 +49,10 @@ const HomeScreen = ({ navigation }: any) => {
     }, [])
     const getNewTask = async () => {
         setisLoading(true);
-        await firestore().collection('task').orderBy('dueDate').limit(3).onSnapshot(snap => {
+        await firestore().collection('task').where('uids', 'array-contains', user?.uid).orderBy('dueDate').limit(3).onSnapshot(snap => {
             if (!snap) {
                 console.log('Tasks not found!');
+                setisLoading(false);
             } else {
                 const items: TaskModel[] = [];
                 snap.forEach((item: any) => items.push({
@@ -208,11 +209,11 @@ const HomeScreen = ({ navigation }: any) => {
                                             <TextComponent text={task[2].description} />
                                             <AvatarGroup uids={task[2].uids}></AvatarGroup>
                                             {task[2]?.progress !== undefined && (
-                                                    <ProgressBarComponent
-                                                        title
-                                                        percent={Math.floor((Number(task[2].progress ?? 0) * 100))}
-                                                    />
-                                                )}
+                                                <ProgressBarComponent
+                                                    title
+                                                    percent={Math.floor((Number(task[2].progress ?? 0) * 100))}
+                                                />
+                                            )}
                                             <TextComponent text={`Due ${task[2].dueDate instanceof firestore.Timestamp
                                                 ? task[2].dueDate.toDate().toDateString() // Chuyển đổi Firestore Timestamp thành Date
                                                 : new Date(task[1].dueDate).toDateString() // Nếu dueDate đã là Date
@@ -238,11 +239,11 @@ const HomeScreen = ({ navigation }: any) => {
                         </RowComponent>
                     </CardContentComponent>
                 </SectionComponent>
-                <SpaceComponent height={60} />
+                <SpaceComponent height={90} />
             </Containers>
             <View style={{
                 position: 'absolute',
-                bottom: 0,
+                bottom: 30,
                 left: 0,
                 right: 0,
                 padding: 20

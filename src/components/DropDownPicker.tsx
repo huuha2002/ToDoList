@@ -85,7 +85,7 @@ const DropDownPicker = (props: Props) => {
                         borderColor: colors.desc
                     }}
                     key={id}>
-                    <TextComponent text={item.label} flex={0} />
+                    <TextComponent numbOfLine={1} text={item.label} flex={0} />
                     <TouchableOpacity
                         onPress={() => handleRemoveSelected(index)}
                         style={{ alignSelf: 'flex-start' }}>

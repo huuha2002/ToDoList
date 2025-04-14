@@ -15,9 +15,9 @@ import firestore from '@react-native-firebase/firestore'
 import TitleComponent from '../../components/TitleComponent';
 import DocumentPicker, { DocumentPickerOptions, DocumentPickerResponse } from 'react-native-document-picker';
 import TextComponent from '../../components/TextComponent';
-import storage from '@react-native-firebase/storage';
 import axios from 'axios';
 import ButtonComponent from '../../components/ButtonComponent';
+import auth from '@react-native-firebase/auth';
 
 const initValue: TaskModel = {
     id: '',
@@ -36,6 +36,12 @@ const AddNewTask = ({ navigation }: any) => {
     const [attachments, setAttachments] = useState<DocumentPickerResponse[]>([])
     const [attachmentUrl, setAttachmentUrl] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
+
+    //GET CURRENT USER
+    const user = auth().currentUser;
+    useEffect(() => {
+        user && settaskDetail({ ...taskDetail, uids: [user.uid] })
+    }, [user])
     //GET USER DATA
     useEffect(() => {
         handleGetAllUsers();
@@ -43,8 +49,7 @@ const AddNewTask = ({ navigation }: any) => {
 
     const handleGetAllUsers = async () => {
         await firestore().collection('users')
-            .get()
-            .then(snap => {
+            .onSnapshot(snap => {
                 if (snap.empty) {
                     console.log('User data not found!');
                 }
@@ -56,6 +61,7 @@ const AddNewTask = ({ navigation }: any) => {
                             value: item.id
                         })
                     });
+                    console.log(items);
                     setUserSelect(items);
                 }
             })
@@ -70,23 +76,28 @@ const AddNewTask = ({ navigation }: any) => {
 
     //Add New Task
     const handleAddNewTask = async () => {
-        setIsLoading(true);
-        navigation.goBack();
-        const URL = []
-        // Sử dụng vòng lặp for...of để có thể dùng await
-        for (const item of attachments) {
-            const fileUrl = await handleUploadFileToStorage(item); // Đợi kết quả upload
-            URL.push(fileUrl); // Thêm URL vào mảng
+        if (user) {
+            setIsLoading(true);
+            navigation.goBack();
+            const URL = []
+            // Sử dụng vòng lặp for...of để có thể dùng await
+            for (const item of attachments) {
+                const fileUrl = await handleUploadFileToStorage(item); // Đợi kết quả upload
+                URL.push(fileUrl); // Thêm URL vào mảng
+            }
+            console.log('AttachmentsURL: ' + [...URL]);
+            const data = {
+                ...taskDetail,
+                attachments: [...URL]
+            }
+            await firestore().collection('task').add(data).then(() => {
+                console.log('Add New Task Successful!');
+                setIsLoading(false);
+            }).catch(error => console.log('Add new task error: ' + error))
+        } else {
+            console.log('Please login!');
         }
-        console.log('AttachmentsURL: ' + [...URL]);
-        const data = {
-            ...taskDetail,
-            attachments: [...URL]
-        }
-        await firestore().collection('task').add(data).then(() => {
-            console.log('Add New Task Successful!');
-            setIsLoading(false);
-        }).catch(error => console.log('Add new task error: ' + error))
+
 
     }
 
