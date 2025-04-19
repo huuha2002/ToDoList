@@ -1,5 +1,5 @@
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import firestore from '@react-native-firebase/firestore';
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { Alert } from "react-native";
 
 export class HandleUser {
@@ -16,6 +16,36 @@ export class HandleUser {
             console.log('Register Error: Uplpad to Firebase errors! ', e);
         }
     }
+    //ADD FRIEND
+    static sendFriendRequest = async (senderId: string, receiverId: string) => {
+        const combinedId = [senderId, receiverId].sort().join('_');
+
+        await firestore().collection('friendships').doc(combinedId).set({
+            user1: senderId,
+            user2: receiverId,
+            status: 'pending',
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            requestedBy: senderId
+        });
+    }
+    static acceptFriendRequest = async (userA: string, userB: string) => {
+        const combinedId = [userA, userB].sort().join('_');
+
+        await firestore().collection('friendships').doc(combinedId).update({
+            status: 'accepted',
+            acceptedAt: firestore.FieldValue.serverTimestamp()
+        });
+
+        // // Cập nhật danh sách bạn bè trong user document (nếu dùng cách 2)
+        // await firestore().collection('users').doc(userA).update({
+        //   friends: firestore.FieldValue.arrayUnion(userB)
+        // });
+
+        // await firestore().collection('users').doc(userB).update({
+        //   friends: firestore.FieldValue.arrayUnion(userA)
+        // });
+    }
+
     static addFriend = async (currentUserId: string, friendUserId: string) => {
         try {
             const batch = firestore().batch();
@@ -76,6 +106,72 @@ export class HandleUser {
             return friendsList;
         } catch (error) {
             console.error('Error getting friends list:', error);
+            throw error;
+        }
+    };
+
+    //CHECK FRIENDSHIP
+
+    static checkFriendshipStatus = async (currentUserId: string, otherUserId: string) => {
+        // Tạo combinedId đã sắp xếp
+        const combinedId = [currentUserId, otherUserId]
+            .sort()
+            .join('_');
+
+        try {
+            const docRef = firestore().collection('friendships').doc(combinedId);
+            const docSnapshot = await docRef.get();
+
+            if (!docSnapshot.exists) {
+                return { exists: false, status: null };
+            }
+
+            const friendshipData: FirebaseFirestoreTypes.DocumentData | any = docSnapshot.data();
+            return {
+                exists: true,
+                status: friendshipData.status || 'accepted',
+                friendshipId: combinedId,
+                createdAt: friendshipData.createdAt?.toDate(),
+                // Các thông tin khác nếu cần
+            };
+        } catch (error) {
+            console.error('Lỗi khi kiểm tra bạn bè:', error);
+            return { exists: false, status: null };
+        }
+    }
+
+    static checkFriend = async (userA: string, userB: string) => {
+        const friendshipsRef = firestore().collection('friendships');
+
+        // Tạo 2 truy vấn song song
+        const query1 = friendshipsRef
+            .where('user1', '==', userA)
+            .where('user2', '==', userB)
+            .limit(1);
+
+        const query2 = friendshipsRef
+            .where('user1', '==', userB)
+            .where('user2', '==', userA)
+            .limit(1);
+
+        const [snapshot1, snapshot2] = await Promise.all([query1.get(), query2.get()]);
+
+        return !snapshot1.empty || !snapshot2.empty;
+    }
+
+    static checkFriendWithQuery = async (currentUserId: string, friendUidToCheck: string) => {
+        try {
+            const querySnapshot = await firestore()
+                .collection('friendships')
+                .doc(currentUserId)
+                .collection('friends') // Nếu bạn dùng subcollection
+                .where('uid', '==', friendUidToCheck)
+                .limit(1)
+                .get();
+
+            return !querySnapshot.empty;
+        } catch (error) {
+            console.error('Lỗi khi kiểm tra bạn bè:', error);
             throw error;
         }
     };
