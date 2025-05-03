@@ -9,6 +9,7 @@ import LoginScreen from '../Screen/auth/LoginScreen';
 import RegisterScreen from '../Screen/auth/RegisterScreen';
 import UserInfoScreen from '../Screen/User/UserInfoScreen';
 import TaskDetail from '../Screen/tasks/TaskDetail';
+import AllTasksScreen from '../Screen/tasks/AllTasksScreen';
 
 const Router = () => {
     const [isLogin, setIsLogin] = useState(false)
@@ -32,6 +33,7 @@ const Router = () => {
             <Stack.Screen name='SearchScreen' component={SearchScreen} />
             <Stack.Screen name='UserInfoScreen' component={UserInfoScreen} />
             <Stack.Screen name='TaskDetail' component={TaskDetail} />
+            <Stack.Screen name='AllTasksScreen' component={AllTasksScreen}/>
         </Stack.Navigator>
     )
 

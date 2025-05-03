@@ -18,6 +18,7 @@ import TextComponent from '../../components/TextComponent';
 import axios from 'axios';
 import ButtonComponent from '../../components/ButtonComponent';
 import auth from '@react-native-firebase/auth';
+import { CreateColor } from '../../utils/CreateColors';
 
 const initValue: TaskModel = {
     id: '',
@@ -28,7 +29,8 @@ const initValue: TaskModel = {
     end: new Date(),
     uids: [],
     attachments: [],
-    progress: 0
+    progress: 0,
+    color: CreateColor.getRandomColor()
 }
 const AddNewTask = ({ navigation }: any) => {
     const [taskDetail, settaskDetail] = useState<TaskModel>(initValue);

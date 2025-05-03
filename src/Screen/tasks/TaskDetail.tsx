@@ -255,7 +255,7 @@ const TaskDetail = ({ navigation, route }: any) => {
     }
 
     //DELETE ATTACHMENTS
-    const deleteAttachment = (type: String, index: any) => {
+    const deleteAttachment = (type: String, index: any, id?: any) => {
         if (type === 'fileUrls') {
             const newData = fileUrls.filter((_, i) => i !== index);
             setfileUrl(newData);
@@ -264,8 +264,14 @@ const TaskDetail = ({ navigation, route }: any) => {
             const newData = files.filter((_, i) => i !== index);
             setFiles(newData);
         }
-
+        if (type === 'subTasks' && id) {
+            const newData = subTasks.filter((_, i) => i !== index);
+            setsubTasks(newData);
+            firestore().collection('subTasks').doc(id).delete();
+        }
     }
+
+
     return tasktDetail ? (
         // !loading ?
         <View style={[globalStyles.container, { paddingTop: 0 }]}>
@@ -457,9 +463,9 @@ const TaskDetail = ({ navigation, route }: any) => {
                                             <TextComponent numbOfLine={1} text={item.title ?? 'No title'} />
                                             <TextComponent size={12} text={HandleDateTime.DateString(new Date(item.createAt))} />
                                         </View>
-                                        {/* <TouchableOpacity onPress={() => deleteAttachment('fileUrls', index)}>
-                                        <AntDesign name="close" size={22} color={colors.text} />
-                                    </TouchableOpacity> */}
+                                        <TouchableOpacity onPress={() => deleteAttachment('subTasks', index, item.id)}>
+                                            <AntDesign name="close" size={22} color={colors.text} />
+                                        </TouchableOpacity>
                                     </RowComponent>
                                 </CardContentComponent>
                             </TouchableOpacity>

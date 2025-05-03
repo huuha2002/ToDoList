@@ -3,12 +3,14 @@ import { Image, StyleSheet, View } from 'react-native';
 import RowComponent from './rowComponent';
 import TextComponent from './TextComponent';
 import firestore from '@react-native-firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 interface Props {
     uids?: string[]
 }
 const AvatarGroup = (props: Props) => {
     const { uids } = props
+    const navigation = useNavigation()
     const imageURL = 'https://s.abcnews.com/images/GMA/john-wick-ht-bb-230216_1676562305682_hpMain_1x1_608.jpg'
     const [imgUrls, setImgUrls] = useState<string[]>([]);
 
@@ -27,19 +29,31 @@ const AvatarGroup = (props: Props) => {
     //Get user imgUrl
     const getUserImageUris = async (uids: string[]) => {
         try {
-            const promises = uids.map(uid =>
-                firestore().collection('users').doc(uid).get()
-            );
-
-            const snapshots = await Promise.all(promises);
-
-            const imageUris = snapshots
-                .filter(snapshot => snapshot.exists)
-                .map(snapshot => snapshot.data()?.imageUri)
-                .filter(uri => uri !== undefined && uri !== null) as string[];
-
-            setImgUrls(imageUris);
-            return imageUris;
+            uids.forEach((uid, index) => {
+                const unsubscribe = firestore()
+                    .collection('users')
+                    .doc(uid)
+                    .onSnapshot({
+                        next: (snapshot) => {
+                            if (snapshot.exists) {
+                                const imageUri = snapshot.data()?.imageUri;
+                                if (imageUri) {
+                                    // Update the specific index
+                                    setImgUrls(prev => {
+                                        const updated = [...prev];
+                                        updated[index] = imageUri;
+                                        return updated;
+                                    });
+                                }
+                            }
+                        },
+                        error: (error) => {
+                            console.error(`Error fetching user ${uid}:`, error);
+                        }
+                    });
+    
+            });
+            
         } catch (error) {
             console.error('Error fetching image URIs:', error);
             throw error;

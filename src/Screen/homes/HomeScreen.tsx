@@ -9,6 +9,7 @@ import TitleComponent from '../../components/TitleComponent';
 import CardContentComponent from '../../components/CardContentComponent';
 import { colors } from '../../constants/color';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import SpaceComponent from '../../components/SpaceComponent';
 import TagComponent from '../../components/TagComponent';
@@ -16,7 +17,6 @@ import CircularComponent from '../../components/CircularComponent';
 import CardImageComponent from '../../components/CardImageComponent';
 import AvatarGroup from '../../components/AvatarGroup';
 import ProgressBarComponent from '../../components/ProgressBarComponent';
-import { fontFamilies } from '../../constants/fontFamilies';
 import ButtonComponent from '../../components/ButtonComponent';
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore';
@@ -46,7 +46,7 @@ const HomeScreen = ({ navigation }: any) => {
     //Get Task
     useEffect(() => {
         getNewTask();
-    }, [])
+    }, [navigation])
     const getNewTask = async () => {
         setisLoading(true);
         await firestore().collection('task').where('uids', 'array-contains', user?.uid).orderBy('dueDate').limit(3).onSnapshot(snap => {
@@ -226,7 +226,13 @@ const HomeScreen = ({ navigation }: any) => {
                         </SectionComponent>
                         : <></>
                 }
-
+                {/* See more Button */}
+                <SectionComponent>
+                    <RowComponent onPress={() => navigation.navigate('AllTasksScreen',{id:user?.uid})} justify='flex-end'>
+                        <TextComponent style={{ textDecorationLine: 'underline', paddingRight: 5 }} flex={0} text='See more' />
+                        <AntDesign name="arrowright" size={20} color={colors.text} />
+                    </RowComponent>
+                </SectionComponent>
 
                 <SectionComponent>
                     <TitleComponent text='Urgent Tasks' />
